@@ -1,0 +1,35 @@
+name: CI/CD Workflow
+
+on:
+  push:
+    branches: [docker_ci]
+
+jobs:
+  build_and_test_container:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: pip install scikit-learn joblib
+
+    - name: Train model
+      run: python src/train.py
+
+    - name: Build Docker Image
+      run: docker build -t geek1060/mlops-a3 .
+
+    - name: Run Container
+      run: docker run geek1060/mlops-a3
+
+    - name: Docker Login
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: Push Docker Image
+      run: docker push geek1060/mlops-a3
